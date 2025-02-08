@@ -1,43 +1,31 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
 
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
+
+// Auth Middleware for protected routes
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user();
+
+    Route::prefix('auth')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
+        Route::post('/create-token', [AuthController::class, 'createToken']);
+        Route::post('/update-profile', [AuthController::class, 'updateProfile']);
+        Route::post('/delete-profile', [AuthController::class, 'deleteAccount']);
+        Route::post('/send-reset-password-email', [AuthController::class, 'sendResetPasswordEmail']);
+        Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     });
 
-    Route::post('/logout', function (Request $request) {
-        $request->user()->tokens()->delete();
-        return response()->json(['message' => 'Logged out successfully.']);
+    Route::prefix('user')->group(function () {
+        Route::get('/me', [UserController::class, 'me']);
+        Route::post('/create', [UserController::class, 'createUser']);
+        Route::post('/update', [UserController::class, 'updateUser']);
+        Route::post('/update-password', [UserController::class, 'updatePassword']);
     });
 
-    Route::post('/tokens/create', function (Request $request) {
-        $token = $request->user()->createToken($request->token_name);
-
-        return ['token' => $token->plainTextToken];
-    });
-
-    Route::post('/refresh-token', function (Request $request) {
-        $token = $request->user()->createToken('refresh-token')->plainTextToken;
-        return response()->json(['token' => $token]);
-    });
-
-    Route::post('/update-user', function (Request $request) {
-        $request->user()->update($request->all());
-        return response()->json(['message' => 'User updated successfully.']);
-    });
-
-    Route::post('/update-password', function (Request $request) {
-        $request->user()->update([
-            'password' => Hash::make($request->password)
-        ]);
-        return response()->json(['message' => 'Password updated successfully.']);
-    });
 });
