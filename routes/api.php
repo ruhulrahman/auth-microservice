@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CommonController;
 use Illuminate\Support\Facades\Route;
+use App\Enums\UserRole;
 
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -26,6 +29,21 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/create', [UserController::class, 'createUser']);
         Route::post('/update', [UserController::class, 'updateUser']);
         Route::post('/update-password', [UserController::class, 'updatePassword']);
+    });
+
+    // Route accessible only by admins
+    Route::middleware('role:' . UserRole::ADMIN->value)->group(function () {
+        Route::get('/admin-only', [AdminController::class, 'index']);
+    });
+
+    // Route accessible only by users
+    Route::middleware('role:' . UserRole::USER->value)->group(function () {
+        Route::get('/user-only', [UserController::class, 'index']);
+    });
+
+    // Route accessible by both admins and users
+    Route::middleware('role:' . UserRole::ADMIN->value . ',' . UserRole::USER->value)->group(function () {
+        Route::get('/admin-and-user', [CommonController::class, 'index']);
     });
 
 });
